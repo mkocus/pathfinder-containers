@@ -1,13 +1,13 @@
-FROM php:7.2.11-fpm-alpine3.7 as build
+FROM php:7.2.34-fpm-alpine3.12 as build
 
 RUN apk update \
     && apk add --no-cache libpng-dev  zeromq-dev git \
     $PHPIZE_DEPS \ 
     && docker-php-ext-install gd && docker-php-ext-install pdo_mysql && \
-    curl 'http://pecl.php.net/get/redis-5.3.7.tgz' -o redis-5.3.7.tgz && pecl install redis-5.3.7.tgz && docker-php-ext-enable redis && \
-    curl 'http://pecl.php.net/get/zmq-1.1.3.tgz' -o zmq-1.1.3.tgz && pecl install zmq-1.1.3.tgz && docker-php-ext-enable zmq && \
-#    pecl install redis && docker-php-ext-enable redis && \
-#    pecl install channel://pecl.php.net/zmq-1.1.3 && docker-php-ext-enable zmq && \
+#    curl 'http://pecl.php.net/get/redis-5.3.7.tgz' -o redis-5.3.7.tgz && pecl install redis-5.3.7.tgz && docker-php-ext-enable redis && \
+#    curl 'http://pecl.php.net/get/zmq-1.1.3.tgz' -o zmq-1.1.3.tgz && pecl install zmq-1.1.3.tgz && docker-php-ext-enable zmq && \
+    pecl install redis && docker-php-ext-enable redis && \
+    pecl install channel://pecl.php.net/zmq-1.1.3 && docker-php-ext-enable zmq && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 COPY pathfinder /app
@@ -22,9 +22,8 @@ RUN apk update && apk add --no-cache busybox-suid sudo php7-redis php7-pdo php7-
     php7-fileinfo php7-event shadow gettext bash apache2-utils logrotate ca-certificates
 
 # fix expired DST Cert
-#RUN sed -i '/^mozilla\/DST_Root_CA_X3.crt$/ s/^/!/' /etc/ca-certificates.conf \
-#    && update-ca-certificates 
-#RUN update-ca-certificates
+RUN sed -i '/^mozilla\/DST_Root_CA_X3.crt$/ s/^/!/' /etc/ca-certificates.conf \
+    && update-ca-certificates 
 
 # symlink nginx logs to stdout/stderr for supervisord
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
